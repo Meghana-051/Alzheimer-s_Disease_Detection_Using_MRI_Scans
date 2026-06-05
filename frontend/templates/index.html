@@ -3,147 +3,468 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Alzheimer's Detection</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>Neuro-Platform Tier-1 Radiology Suite</title>
+    <style>
+        :root {
+            --bg-primary: #0b0f19;
+            --bg-secondary: #131a2c;
+            --bg-card: #1e2942;
+            --border-color: #2e3f62;
+            --text-main: #f1f5f9;
+            --text-muted: #94a3b8;
+            --accent-blue: #3b82f6;
+            --accent-green: #10b981;
+            --accent-orange: #f59e0b;
+            --accent-red: #ef4444;
+            --accent-darkred: #991b1b;
+        }
+
+        body { 
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; 
+            background-color: var(--bg-primary); 
+            color: var(--text-main); 
+            margin: 0; 
+            padding: 0;
+            line-height: 1.5;
+        }
+
+        .dashboard-container { 
+            max-width: 1400px; 
+            margin: 0 auto; 
+            padding: 30px; 
+        }
+
+        .header-banner { 
+            background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%); 
+            color: white; 
+            padding: 25px 35px; 
+            border-radius: 12px; 
+            margin-bottom: 30px; 
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3);
+            border: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-title h1 { margin: 0; font-size: 2rem; font-weight: 700; letter-spacing: -0.025em; }
+        .header-title p { margin: 6px 0 0 0; color: var(--text-muted); font-size: 1rem; }
+        .node-badge { background: rgba(16, 185, 129, 0.15); color: var(--accent-green); padding: 6px 14px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; border: 1px solid rgba(16, 185, 129, 0.3); }
+
+        .dashboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
+        
+        .card { 
+            background: var(--bg-secondary); 
+            padding: 30px; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 20px -2px rgba(0,0,0,0.2); 
+            border: 1px solid var(--border-color); 
+        }
+        
+        .card h3 { 
+            margin-top: 0; 
+            color: var(--text-main); 
+            border-bottom: 1px solid var(--border-color); 
+            padding-bottom: 15px; 
+            margin-bottom: 25px; 
+            font-size: 1.25rem;
+            font-weight: 600;
+            letter-spacing: -0.01em;
+        }
+
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 8px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+        
+        .form-control { 
+            width: 100%; 
+            padding: 12px; 
+            background: var(--bg-primary); 
+            border: 1px solid var(--border-color); 
+            border-radius: 8px; 
+            box-sizing: border-box; 
+            font-size: 0.95rem; 
+            color: var(--text-main);
+            transition: all 0.2s;
+        }
+        .form-control:focus { outline: none; border-color: var(--accent-blue); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2); }
+
+        input[type="file"]::-webkit-file-upload-button {
+            background: var(--bg-card);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-right: 10px;
+        }
+        input[type="file"]::-webkit-file-upload-button:hover { background: var(--border-color); }
+
+        .btn-primary { 
+            width: 100%; 
+            padding: 14px; 
+            background: var(--accent-blue); 
+            color: white; 
+            border: none; 
+            border-radius: 8px; 
+            font-weight: 700; 
+            font-size: 1rem; 
+            cursor: pointer; 
+            transition: background 0.2s, transform 0.1s; 
+        }
+        .btn-primary:hover { background: #2563eb; }
+        .btn-primary:active { transform: scale(0.99); }
+
+        .vitals-row { display: flex; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid var(--border-color); font-size: 1rem; }
+        .vitals-row:last-child { border-bottom: none; }
+        .vitals-label { font-weight: 500; color: var(--text-muted); }
+        .vitals-value { color: var(--text-main); font-weight: 600; }
+
+        .prob-bar-container { margin-bottom: 18px; }
+        .prob-label { display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 6px; font-weight: 600; color: var(--text-muted); }
+        .prob-bar { width: 100%; background-color: var(--bg-primary); border-radius: 6px; height: 12px; overflow: hidden; border: 1px solid var(--border-color); }
+        .prob-fill { height: 100%; width: 0%; transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1); }
+
+        .results-panel { background: var(--bg-secondary); padding: 30px; border-radius: 12px; margin-top: 30px; box-shadow: 0 4px 20px -2px rgba(0,0,0,0.2); border: 1px solid var(--border-color); }
+        
+        .results-layout { display: flex; gap: 30px; margin-top: 20px; }
+        .report-view-panel { flex: 1.4; min-width: 0; }
+        .visual-overlay-panel { flex: 0.8; text-align: center; display: none; background: var(--bg-primary); padding: 20px; border-radius: 10px; border: 1px solid var(--border-color); }
+
+        .report-box { 
+            background: var(--bg-primary); 
+            padding: 25px; 
+            border-radius: 8px; 
+            border-left: 4px solid var(--accent-blue); 
+            margin-bottom: 25px; 
+            max-height: 550px;
+            overflow-y: auto;
+            border-top: 1px solid var(--border-color);
+            border-right: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        #ai-summary-text {
+            color: #cbd5e1; 
+            margin: 0; 
+            line-height: 1.6; 
+            font-size: 0.92rem;
+            white-space: pre-wrap; 
+            font-family: 'Consolas', 'Courier New', Courier, monospace;
+        }
+
+        .btn-success { 
+            padding: 12px 24px; 
+            background: var(--accent-green); 
+            color: white; 
+            border: none; 
+            border-radius: 8px; 
+            font-weight: 700; 
+            cursor: pointer; 
+            transition: background 0.2s;
+            display: none;
+        }
+        .btn-success:hover { background: #059669; }
+
+        .heatmap-img { width: 100%; max-width: 280px; border-radius: 8px; border: 1px solid var(--border-color); margin-top: 15px; box-shadow: 0 8px 16px rgba(0,0,0,0.4); }
+
+        .history-card { margin-top: 30px; }
+        .history-table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.9rem; }
+        .history-table th, .history-table td { padding: 14px; text-align: left; border-bottom: 1px solid var(--border-color); }
+        .history-table th { background-color: var(--bg-primary); color: var(--text-muted); font-weight: 600; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; }
+        .history-table td { color: var(--text-main); }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Alzheimer's Disease Detection</h1>
-        <p>Upload a brain MRI scan to get a condition assessment.</p>
+    <div class="dashboard-container">
+        <div class="header-banner">
+            <div class="header-title">
+                <h1>Clinical Neuroradiology Workspace</h1>
+                <p>Advanced Architectural Evaluation & Automated Diagnostic Pipeline</p>
+            </div>
+            <div class="node-badge">System Node Live: Localhost:5000</div>
+        </div>
 
-        <form id="analysis-form">
-            <div class="form-group">
-                <label for="patient-name">Patient Name:</label>
-                <input type="text" id="patient-name" name="name" placeholder="Enter name">
-            </div>
-            
-            <div class="form-group">
-                <label for="patient-age">Patient Age:</label>
-                <input type="number" id="patient-age" name="age" placeholder="Enter age" min="0">
+        <div class="dashboard-grid">
+            <div class="card">
+                <h3>Patient Registration & Core Matrix Intake</h3>
+                <form id="analysis-form">
+                    <div class="form-group">
+                        <label for="patient-name">Evaluation Subject Name:</label>
+                        <input type="text" id="patient-name" class="form-control" placeholder="e.g. Eleanor Vance">
+                    </div>
+                    <div class="form-group">
+                        <label for="patient-age">Patient Biological Age:</label>
+                        <input type="number" id="patient-age" class="form-control" placeholder="Enter age" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="patient-gender">Phenotypic Sex Category:</label>
+                        <select id="patient-gender" class="form-control">
+                            <option value="">Select Category...</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="image-upload">Structural Neuroimaging File Ingestion (MRI Voxel Slice):</label>
+                        <input type="file" id="image-upload" class="form-control" accept="image/*">
+                    </div>
+                    <button type="button" class="btn-primary" onclick="analyzeImage()">Execute Diagnostic Inferences</button>
+                </form>
             </div>
 
-            <div class="form-group">
-                <label for="patient-gender">Patient Gender:</label>
-                <select id="patient-gender" name="gender">
-                    <option value="">Select...</option>
-                    <option value="male">Male</option>
-                    <option value="female">Female</option>
-                    <option value="other">Other</option>
-                </select>
-            </div>
+            <div class="card">
+                <h3>Real-Time Diagnostic Inferences</h3>
+                <div id="vitals-panel">
+                    <div class="vitals-row">
+                        <span class="vitals-label">Subject Identification:</span>
+                        <span class="vitals-value" id="vital-name">---</span>
+                    </div>
+                    <div class="vitals-row">
+                        <span class="vitals-label">Demographic Vectors:</span>
+                        <span class="vitals-value" id="vital-demographics">---</span>
+                    </div>
+                    <div class="vitals-row">
+                        <span class="vitals-label">Assigned Analytical Stage:</span>
+                        <span class="vitals-value" id="vital-status" style="color: var(--accent-blue);">---</span>
+                    </div>
+                </div>
 
-            <div class="form-group">
-                <label for="image-upload">Upload MRI Scan:</label>
-                <input type="file" id="image-upload" name="image" accept="image/*">
-            </div>
-            
-            <button type="button" onclick="analyzeImage()">Analyze MRI</button>
-        </form>
-
-        <div id="results" class="results-container">
-            <h2>Results:</h2>
-            <div class="result-item">
-                <strong>Predicted Condition:</strong> <span id="level">---</span>
-            </div>
-            <div class="result-item">
-                <strong>Confidence Score:</strong> <span id="score">---</span>
-            </div>
-            <div class="result-item">
-                <strong>Patient Info:</strong> <span id="patient-info">---</span>
+                <div style="margin-top: 25px;">
+                    <label class="vitals-label" style="display:block; margin-bottom: 15px; font-weight:600; text-transform:uppercase; font-size:0.75rem; letter-spacing:0.05em;">Cross-Entropy Softmax Activation Profiles:</label>
+                    
+                    <div class="prob-bar-container">
+                        <div class="prob-label"><span>Non-Demented Signature Spectrum</span><span id="val-nd">0%</span></div>
+                        <div class="prob-bar"><div id="fill-nd" class="prob-fill" style="background-color: var(--accent-green);"></div></div>
+                    </div>
+                    <div class="prob-bar-container">
+                        <div class="prob-label"><span>Early Neurodegeneration Threshold</span><span id="val-vmd">0%</span></div>
+                        <div class="prob-bar"><div id="fill-vmd" class="prob-fill" style="background-color: var(--accent-orange);"></div></div>
+                    </div>
+                    <div class="prob-bar-container">
+                        <div class="prob-label"><span>Mild Cortical Atrophy Indicators</span><span id="val-md">0%</span></div>
+                        <div class="prob-bar"><div id="fill-md" class="prob-fill" style="background-color: var(--accent-red);"></div></div>
+                    </div>
+                    <div class="prob-bar-container">
+                        <div class="prob-label"><span>Advanced Volume Reduction Flags</span><span id="val-mod">0%</span></div>
+                        <div class="prob-bar"><div id="fill-mod" class="prob-fill" style="background-color: var(--accent-darkred);"></div></div>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <button id="download-btn" class="download-btn" style="display:none;" onclick="downloadReport()">Download Report</button>
+        <div id="results" class="results-panel">
+            <h3 style="border-bottom: 1px solid var(--border-color); padding-bottom:15px; margin-bottom:20px;">Diagnostic Laboratory Findings Summary</h3>
+            
+            <div class="results-layout">
+                <div class="report-view-panel">
+                    <div class="report-box">
+                        <pre id="ai-summary-text">System status idle. Awaiting structural neuroimaging file ingestion matrix loops...</pre>
+                    </div>
+                    <button id="download-btn" class="btn-success" onclick="downloadReport()">Download Official Case Report (PDF)</button>
+                </div>
+
+                <div id="heatmap-preview-box" class="visual-overlay-panel">
+                    <span style="font-weight: 600; display: block; font-size: 0.85rem; color: var(--text-muted); text-transform:uppercase; letter-spacing:0.05em;">Grad-CAM 3D Localized Feature Activation Mapping</span>
+                    <img id="heatmap-view-element" class="heatmap-img" src="">
+                </div>
+            </div>
+        </div>
+
+        <div class="card history-card">
+            <h3>Departmental Patient Diagnostic Registry Logs</h3>
+            <table class="history-table">
+                <thead>
+                    <tr>
+                        <th>Patient Name Identification</th>
+                        <th>Demographic Profile Vectors</th>
+                        <th>Assigned Clinical Stage</th>
+                        <th>Modal Attention Weights Split (Visual/Tabular)</th>
+                    </tr>
+                </thead>
+                <tbody id="history-log-rows">
+                    <tr>
+                        <td colspan="4" style="text-align: center; color: var(--text-muted); padding: 30px;">No patient diagnostic iterations logged in current standalone session cache.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <script>
         let predictionData = {};
 
+        document.addEventListener("DOMContentLoaded", renderHistoryLog);
+
         function analyzeImage() {
             const fileInput = document.getElementById('image-upload');
             const file = fileInput.files[0];
             const downloadBtn = document.getElementById('download-btn');
+            const heatmapBox = document.getElementById('heatmap-preview-box');
+            const heatmapImg = document.getElementById('heatmap-view-element');
+            const aiSummaryField = document.getElementById('ai-summary-text');
             
-            const patientName = document.getElementById('patient-name').value;
-            const patientAge = document.getElementById('patient-age').value;
-            const patientGender = document.getElementById('patient-gender').value;
+            const patientName = document.getElementById('patient-name').value || 'Anonymous Subject';
+            const patientAge = parseFloat(document.getElementById('patient-age').value) || 60;
+            const genderValue = document.getElementById('patient-gender').value;
+            const patientGenderBinary = (genderValue === "Male") ? 1 : 0; 
 
             if (!file) {
-                alert('Please select an image file first.');
+                alert('Validation Alert: Please select a neuroimaging scan slice file (.gif, .png, .jpg) to initialize arrays.');
                 return;
             }
 
             const formData = new FormData();
-            formData.append('image', file);
+            formData.append('mri_file', file);
             formData.append('name', patientName);
             formData.append('age', patientAge);
-            formData.append('gender', patientGender);
+            formData.append('gender', patientGenderBinary);
+            formData.append('mmse', 26.0);      
+            formData.append('apoe_e4', 1);       
+            formData.append('cdr', 0.5);         
             
             downloadBtn.style.display = 'none';
+            heatmapBox.style.display = 'none';
+            aiSummaryField.textContent = "[PROCESSING] Initializing 3D tensor arrays, running trilinear cross-attention gates, loading clinical graph nodes...";
 
-            fetch('/analyze', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    document.getElementById('level').textContent = data.predicted_level;
-                    document.getElementById('score').textContent = data.prediction_score.toFixed(2);
-                    
-                    document.getElementById('patient-info').textContent = 
-                        `${data.patient_name}, Age: ${data.patient_age}, Gender: ${data.patient_gender}`;
-
-                    predictionData = {
-                        predicted_level: data.predicted_level,
-                        prediction_score: data.prediction_score,
-                        patient_name: data.patient_name,
-                        patient_age: data.patient_age,
-                        patient_gender: data.patient_gender
-                    };
-                    downloadBtn.style.display = 'block';
-                } else {
-                    alert('Error during analysis: ' + data.error);
+            fetch('/api/v1/diagnose', { method: 'POST', body: formData })
+            .then(async response => {
+                if (!response.ok) {
+                    const errDetail = await response.json().catch(() => ({}));
+                    throw new Error(errDetail.detail || `Server exception cluster code: ${response.status}`);
                 }
+                return response.json();
+            })
+            .then(data => {
+                predictionData = {
+                    name: patientName,
+                    stage_label: data.stage_label,
+                    request_id: data.request_id,
+                    clinical_report: data.clinical_report,
+                    confidence_scores: data.confidence_scores,
+                    gradcam_b64: data.gradcam_b64,
+                    modal_gates: data.modal_gates,
+                    gender_str: genderValue || 'Not specified',
+                    age: patientAge
+                };
+
+                displayDiagnosticState(predictionData);
+                cacheSessionToRegistry(predictionData);
             })
             .catch(error => {
-                console.error('Error:', error);
-                alert('An unexpected error occurred. Check the console for details.');
+                console.error('Pipeline Fault Exception:', error);
+                aiSummaryField.textContent = "Pipeline interruption: Operational loop crashed.";
+                alert('Pipeline Failure Alert: ' + error.message);
             });
         }
 
+        function displayDiagnosticState(stateObj) {
+            const downloadBtn = document.getElementById('download-btn');
+            const heatmapBox = document.getElementById('heatmap-preview-box');
+            const heatmapImg = document.getElementById('heatmap-view-element');
+            const aiSummaryField = document.getElementById('ai-summary-text');
+
+            document.getElementById('vital-name').textContent = stateObj.name;
+            document.getElementById('vital-demographics').textContent = `Age: ${stateObj.age} / Sex category: ${stateObj.gender_str}`;
+            document.getElementById('vital-status').textContent = stateObj.stage_label;
+            
+            aiSummaryField.textContent = stateObj.clinical_report;
+            
+            heatmapImg.src = `data:image/png;base64,${stateObj.gradcam_b64}`;
+            heatmapBox.style.display = 'block';
+
+            if (stateObj.confidence_scores && stateObj.confidence_scores.length >= 4) {
+                updateBar('nd', stateObj.confidence_scores[0]);
+                updateBar('vmd', stateObj.confidence_scores[1]);
+                updateBar('md', stateObj.confidence_scores[2]);
+                updateBar('mod', stateObj.confidence_scores[3]);
+            }
+            
+            downloadBtn.style.display = 'inline-block';
+        }
+
+        function updateBar(idKey, fractionalVal) {
+            const percentage = (fractionalVal * 100).toFixed(1);
+            document.getElementById(`val-${idKey}`).textContent = `${percentage}%`;
+            document.getElementById(`fill-${idKey}`).style.width = `${percentage}%`;
+        }
+
+        function cacheSessionToRegistry(sessionObj) {
+            let currentLog = JSON.parse(localStorage.getItem("mri_history_stack")) || [];
+            sessionObj.local_id = "session_" + Date.now();
+            currentLog.unshift(sessionObj);
+            if(currentLog.length > 5) currentLog.pop();
+            localStorage.setItem("mri_history_stack", JSON.stringify(currentLog));
+            renderHistoryLog();
+        }
+
+        function renderHistoryLog() {
+            const logBody = document.getElementById("history-log-rows");
+            let currentLog = JSON.parse(localStorage.getItem("mri_history_stack")) || [];
+            if(currentLog.length === 0) return;
+            
+            logBody.innerHTML = currentLog.map(row => {
+                const safeName = row.name || row.patient_name || 'Unknown Patient';
+                const safeAge = row.age || row.patient_age || 'N/A';
+                const safeGender = row.gender_str || row.patient_gender || 'N/A';
+                const safeGates = row.modal_gates || row.gates || [0.5, 0.5];
+                const safeStage = row.stage_label || 'Processed Case';
+
+                return `
+                    <tr onclick="viewHistoricalSession('${row.local_id || ''}')" style="cursor: pointer; transition: background 0.2s;" onmouseover="this.style.backgroundColor='#1e2942'" onmouseout="this.style.backgroundColor='transparent'">
+                        <td><strong style="color: #3b82f6;">${safeName}</strong></td>
+                        <td>Age Profile: ${safeAge} / ${safeGender}</td>
+                        <td><span style="font-weight:600; color:#cbd5e1;">${safeStage}</span></td>
+                        <td>Visual Channel: ${(safeGates[0]*100).toFixed(0)}% | Tabular Channel: ${(safeGates[1]*100).toFixed(0)}%</td>
+                    </tr>
+                `;
+            }).join("");
+        }
+
+        function viewHistoricalSession(localId) {
+            let currentLog = JSON.parse(localStorage.getItem("mri_history_stack")) || [];
+            const match = currentLog.find(item => item.local_id === localId);
+            
+            if (match) {
+                predictionData = match;
+                displayDiagnosticState(match);
+                window.scrollTo({ top: 300, behavior: 'smooth' });
+            }
+        }
+
         function downloadReport() {
-            if (!predictionData.predicted_level) {
-                alert('Please analyze an image first.');
+            if (!predictionData || !predictionData.clinical_report) {
+                alert("Operation Bypassed: Active diagnostic cache buffer layer is empty.");
                 return;
             }
 
-            fetch('/generate_report', {
+            fetch('/api/v1/report/pdf', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(predictionData)
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: predictionData.name,
+                    stage_label: predictionData.stage_label,
+                    request_id: predictionData.request_id,
+                    clinical_report: predictionData.clinical_report
+                })
             })
             .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
+                if (!response.ok) throw new Error('PDF compiler engine responded with compile fault.');
                 return response.blob();
             })
             .then(blob => {
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
-                a.style.display = 'none';
                 a.href = url;
-                a.download = 'alzheimers_report.pdf';
+                a.download = `Official_Clinical_Report_${predictionData.name.replace(/\s+/g, '_')}.pdf`;
                 document.body.appendChild(a);
                 a.click();
                 window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
             })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('An error occurred while generating the PDF.');
+            .catch(err => {
+                console.error('PDF Engine Crash:', err);
+                alert('Compilation Error: Could not verify and compile signed PDF asset: ' + err.message);
             });
         }
     </script>

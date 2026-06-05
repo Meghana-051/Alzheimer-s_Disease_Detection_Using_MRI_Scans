@@ -1,0 +1,26 @@
+## Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+
+# Model checkpoints and local databases
+checkpoints/
+chroma_guidelines/
+*.sqlite3
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Environment files
+.env
+.env.local
+!.env.example
+
+# OS files
+.DS_Store
+Thumbs.db
